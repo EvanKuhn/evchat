@@ -1,2 +1,2 @@
 # evchat
-Curses-based chat app, in Python
+Curses-based chat app, in Python. For learning.
