@@ -2,8 +2,8 @@
 import curses
 import os
 
-CHAT_APP_VERSION = "0.0.1"
-CHAT_APP_TITLE = "evchat v" + CHAT_APP_VERSION
+EVCHAT_VERSION = "0.0.1"
+EVCHAT_TITLE = "evchat v" + EVCHAT_VERSION
 
 #==============================================================================
 # Simple class to calculate the layout of our UI and windows.
@@ -46,8 +46,8 @@ class Title:
     def __init__(self, layout, screen):
         self.window = curses.newwin(layout.title_rows, layout.title_cols,
             layout.title_start_row, layout.title_start_col)
-        start_col = (layout.title_cols - len(CHAT_APP_TITLE)) / 2
-        self.window.addstr(0, start_col, CHAT_APP_TITLE)
+        start_col = (layout.title_cols - len(EVCHAT_TITLE)) / 2
+        self.window.addstr(0, start_col, EVCHAT_TITLE)
 
     def redraw(self):
         self.window.refresh()
@@ -119,21 +119,15 @@ class ChatApp:
     screen = None
 
     def __init__(self):
-        # Start curses. Will raise if we try to start curses more than once.
-        self.start_curses()
-        self.layout  = Layout()
-        self.screen  = ChatApp.screen
-        self.title   = Title(self.layout, self.screen)
-        self.history = History(self.layout, self.screen)
-        self.prompt  = Prompt(self.layout, self.screen)
+        self.layout = Layout()
 
-    def start_curses(self):
+    def _start_curses(self):
         "Start curses, and initialize the `screen` class variable"
         if ChatApp.screen != None:
             raise StandardError("Curses screen has already been initialized")
         ChatApp.screen = curses.initscr()
 
-    def stop_curses(self):
+    def _stop_curses(self):
         "Stop curses, and deinitialize the `screen` class variable"
         if ChatApp.screen == None:
             raise StandardError("Curses screen has not been initialized")
@@ -146,8 +140,17 @@ class ChatApp:
         self.title.redraw()
         self.prompt.redraw()
 
-    def run(self):
-        "Where the magic happens"
+    def start(self):
+        "Initialize curses, draw the UI, and start the main loop"
+
+        # Start curses and initialize all curses-based objects
+        self._start_curses()
+        self.screen  = ChatApp.screen
+        self.title   = Title(self.layout, self.screen)
+        self.history = History(self.layout, self.screen)
+        self.prompt  = Prompt(self.layout, self.screen)
+
+        # Run the main loop
         while True:
             self.redraw()
             str = self.prompt.get()
@@ -159,11 +162,14 @@ class ChatApp:
             self.history.redraw()
             self.prompt.reset()
 
+    def stop(self):
+        "Stop curses and stop the app"
+        self._stop_curses()
+
 #==============================================================================
 # Main
 #==============================================================================
 
-
 app = ChatApp()
-app.run()
-app.stop_curses()
+app.start()
+app.stop()
