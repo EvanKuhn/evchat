@@ -1,8 +1,9 @@
 TODO:
 [X] Usernames
-[ ] Restrict usernames to alphanumeric, [._-]
+[X] Deinitialize curses safely, even on error
 [X] Timestamps: show if configured
 [X] App configuration
+[ ] Restrict usernames to alphanumeric, [._-]
 [ ] Help text
 [ ] Support commands, make extensible
 [ ] Rooms: list, join, leave

@@ -14,5 +14,9 @@ if not conf.has_required_data():
 
 # Run the app
 app = evchat.core.ChatApp(conf)
-app.start()
-app.stop()
+try:
+    app.start()
+except KeyboardInterrupt:
+    pass
+finally:
+    app.stop()
