@@ -1,10 +1,21 @@
 import curses
+import datetime
 import json
 import os
 import evchat.ui
 
 #==============================================================================
-#
+# Message class
+#==============================================================================
+
+class Message:
+    def __init__(self, time=None, name=None, text=None):
+        self.time = time
+        self.name = name
+        self.text = text
+
+#==============================================================================
+# Config class holds and manages basic app config
 #==============================================================================
 
 class Config:
@@ -12,11 +23,15 @@ class Config:
 
     def __init__(self):
         self.name = None
-        pass
+        self.show_timestamps = False
 
     def save(self, file = None):
         "Save the config to the given file. If none specified, use the default."
-        data = { 'name': self.name }
+        # Construct the data hash
+        data = { }
+        data['name'] = self.name
+        data['show_timestamps'] = self.show_timestamps
+        # Store it to a file
         if file == None:
             file = Config.DEFAULT_FILE
         with open(file, 'w') as f:
@@ -34,6 +49,7 @@ class Config:
             with open(file) as f:
                 data = json.load(f)
                 self.name = data['name']
+                self.show_timestamps = data['show_timestamps']
                 return True
         except:
             pass
@@ -49,6 +65,14 @@ class Config:
         "Prompt the user for any missing data, and store it"
         print "Your evchat config is missing some data. Please enter:"
         self.name = raw_input("Your name: ")
+        while True:
+            a = raw_input("Show timestamps? (Y/n): ").lower()
+            if a == '' or a == 'y' or a == 'yes':
+                self.show_timestamps = True
+                break
+            if a == 'n' or a == 'no':
+                self.show_timestamps = False
+                break
 
 #==============================================================================
 # The ChatApp class is contains all lower-level UI classes, plus the main
@@ -89,19 +113,26 @@ class ChatApp:
         self._start_curses()
         self.screen  = ChatApp.screen
         self.title   = evchat.ui.Title(self.layout, self.screen)
-        self.history = evchat.ui.History(self.layout, self.screen)
+        self.history = evchat.ui.History(self.layout, self.screen, self.config)
         self.prompt  = evchat.ui.Prompt(self.layout, self.screen)
 
         # Run the main loop
         while True:
             self.redraw()
-            str = self.prompt.get()
-            if str == '':
+
+            # Parse the input
+            text = self.prompt.get()
+            if text == '':
                 continue
-            if str == '/quit':
+            if text == '/quit':
                 break
-            str = "%s: %s" % (self.config.name, str)
-            self.history.append(str)
+
+            # Construct and store a Message object
+            now = datetime.datetime.now()
+            msg = evchat.core.Message(now, self.config.name, text)
+            self.history.append(msg)
+
+            # Update the UI
             self.history.redraw()
             self.prompt.reset()
 

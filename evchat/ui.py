@@ -44,7 +44,7 @@ class Title:
         self.window = curses.newwin(layout.title_rows, layout.title_cols,
             layout.title_start_row, layout.title_start_col)
         start_col = (layout.title_cols - len(evchat.TITLE)) / 2
-        self.window.addstr(0, start_col, evchat.TITLE)
+        self.window.addstr(0, start_col, evchat.TITLE, curses.A_BOLD)
 
     def redraw(self):
         self.window.refresh()
@@ -54,28 +54,34 @@ class Title:
 #==============================================================================
 
 class History:
-    def __init__(self, layout, screen):
-        self.lines = []
+    def __init__(self, layout, screen, config):
+        self.messages = []
         self.layout = layout
         self.screen = screen
+        self.config = config
         self.window = curses.newwin(layout.history_rows, layout.history_cols,
             layout.history_start_row, layout.history_start_col)
         # Because we have a border, the number of visible rows/cols is fewer
         self.visible_rows = self.layout.history_rows - 2
         self.visible_cols = self.layout.history_cols - 2
 
-    def append(self, str):
-        "Append a line of text to the history. Does not redraw."
-        self.lines.append(str)
+    def append(self, msg):
+        "Append a Message object to the history. Does not redraw."
+        self.messages.append(msg)
 
     def redraw(self):
         self.window.clear()
         self.window.border(0)
 
-        # Add the last N lines, where N is the number of visible rows
+        # Draw the last N messages, where N is the number of visible rows
         row = 1
-        for line in self.lines[-self.visible_rows:]:
-            self.window.addstr(row, 1, line)
+        for msg in self.messages[-self.visible_rows:]:
+            self.window.move(row, 1)
+            if self.config.show_timestamps:
+                time = "[%02d:%02d] " % (msg.time.hour, msg.time.minute)
+                self.window.addstr(time, curses.A_BOLD)
+            self.window.addstr(msg.name + ': ', curses.A_BOLD)
+            self.window.addstr(msg.text)
             row += 1
 
         self.window.refresh()

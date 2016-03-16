@@ -1,6 +1,7 @@
 TODO:
 [X] Usernames
-[ ] Timestamps
+[ ] Restrict usernames to alphanumeric, [._-]
+[X] Timestamps: show if configured
 [X] App configuration
 [ ] Help text
 [ ] Support commands, make extensible

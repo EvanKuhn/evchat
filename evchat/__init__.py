@@ -1,6 +1,3 @@
-
-print "this is evchat __init__"
-
 import ui
 import core
 
