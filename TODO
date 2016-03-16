@@ -1,12 +1,10 @@
 TODO:
-[ ] Usernames
+[X] Usernames
 [ ] Timestamps
-[ ] App configuration
-[ ] Login?
+[X] App configuration
 [ ] Help text
 [ ] Support commands, make extensible
 [ ] Rooms: list, join, leave
-[ ] Direct messages
 [ ] Tab completion
 [ ] Scrolling back through history
 [ ] Connecting to a server!
@@ -17,5 +15,3 @@ TODO:
 
 Pretty sure my main loop is going to need to handle each character
 as it's given.
-
-

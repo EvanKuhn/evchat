@@ -1,5 +1,6 @@
 import curses
 import json
+import os
 import evchat.ui
 
 #==============================================================================
@@ -7,35 +8,47 @@ import evchat.ui
 #==============================================================================
 
 class Config:
-    DEFAULT_FILE = "~/.evchatrc"
+    DEFAULT_FILE = os.path.expanduser("~/.evchatrc")
 
     def __init__(self):
-        self.name = "TODO"
+        self.name = None
         pass
 
     def save(self, file = None):
         "Save the config to the given file. If none specified, use the default."
+        data = { 'name': self.name }
         if file == None:
             file = Config.DEFAULT_FILE
-        print "TODO: save config to %s" % file
+        with open(file, 'w') as f:
+            f.write(json.dumps(data, indent=2) + "\n")
         self
 
     def load(self, file = None):
-        "Load the config from the given file. If none specified, use the default."
-        if file == None:
-            file = Config.DEFAULT_FILE
-        print "TODO: load config from %s" % file
-        self
+        """
+        Load the config from the given file. If none specified, use the default.
+        Returns True on success, False on failure.
+        """
+        try:
+            if file == None:
+                file = Config.DEFAULT_FILE
+            with open(file) as f:
+                data = json.load(f)
+                self.name = data['name']
+                return True
+        except:
+            pass
+        return False
 
     def has_required_data(self):
         "Return a boolean indicating if all required fields are populated."
-         # TODO
-        True
+        if self.name == None:
+            return False
+        return True
 
     def prompt_user(self):
         "Prompt the user for any missing data, and store it"
-        print "TODO: prompt the user for config data"
-        pass
+        print "Your evchat config is missing some data. Please enter:"
+        self.name = raw_input("Your name: ")
 
 #==============================================================================
 # The ChatApp class is contains all lower-level UI classes, plus the main
