@@ -12,3 +12,10 @@ TODO:
 [ ] Connecting to a server!
 [ ] Authentication (?)
 [ ] Direct messages
+[ ] Handle terminal resize
+[X] Better project structure
+
+Pretty sure my main loop is going to need to handle each character
+as it's given.
+
+
