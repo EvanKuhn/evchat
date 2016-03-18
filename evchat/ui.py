@@ -96,6 +96,7 @@ class Prompt:
         self.screen = screen
         self.window = curses.newwin(layout.prompt_rows, layout.prompt_cols,
             layout.prompt_start_row, layout.prompt_start_col)
+        self.window.keypad(1)
         self.window.addstr('> ')
 
     def getchar(self):

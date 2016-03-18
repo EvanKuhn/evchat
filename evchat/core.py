@@ -2,6 +2,7 @@ import curses
 import datetime
 import json
 import os
+import sys
 import evchat.ui
 
 #==============================================================================
@@ -80,26 +81,32 @@ class Config:
 #==============================================================================
 
 class ChatApp:
-    # Curses screen object
-    screen = None
+    running = False
 
     def __init__(self, config, args):
         self.config = config
         self.layout = evchat.ui.Layout()
         self.args   = args
+        self.screen = None
 
     def _start_curses(self):
         "Start curses, and initialize the `screen` class variable"
-        if ChatApp.screen != None:
-            raise StandardError("Curses screen has already been initialized")
-        ChatApp.screen = curses.initscr()
+        if ChatApp.running:
+            raise StandardError("Curses is already running")
+        self.screen = curses.initscr()
+        curses.cbreak()
+        self.screen.keypad(1)
+        ChatApp.running = True
 
     def _stop_curses(self):
         "Stop curses, and deinitialize the `screen` class variable"
-        if ChatApp.screen == None:
-            raise StandardError("Curses screen has not been initialized")
+        if not ChatApp.running:
+            raise StandardError("Curses is not running")
+        curses.nocbreak()
+        self.screen.keypad(0)
+        self.screen = None
         curses.endwin()
-        ChatApp.screen = None
+        ChatApp.running = False
 
     def redraw(self):
         self.screen.refresh()
@@ -110,11 +117,11 @@ class ChatApp:
     def start(self):
         "Initialize curses, draw the UI, and start the main loop"
         debug = None
+        input = ''
 
         try:
             # Start curses and initialize all curses-based objects
             self._start_curses()
-            self.screen  = ChatApp.screen
             self.title   = evchat.ui.Title(self.layout, self.screen)
             self.history = evchat.ui.History(self.layout, self.screen, self.config)
             self.prompt  = evchat.ui.Prompt(self.layout, self.screen)
@@ -128,11 +135,16 @@ class ChatApp:
                 self.redraw()
 
                 # Get input
-                text = self.prompt.getstr()
+                #text = self.prompt.getstr()
+                c = self.prompt.getchar()
 
                 if debug:
-                    debug.write(text + "\n")
+                    debug.write("char: " + str(c) + "\n")
+                    debug.write("KEY_UP = " + str(curses.KEY_UP) + "\n")
+                    debug.write(str(c == curses.KEY_UP) + "\n")
                     debug.flush()
+
+                text = '' #TODO
 
                 # Parse the input
                 if text == '':
@@ -148,6 +160,11 @@ class ChatApp:
                 # Update the UI
                 self.history.redraw()
                 self.prompt.reset()
+
+        except:
+            if debug:
+                msg = "Exception: " + str(sys.exc_info()[0]) + "\n"
+                debug.write(msg)
 
         finally:
             if debug:
