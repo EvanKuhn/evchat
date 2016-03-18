@@ -98,8 +98,12 @@ class Prompt:
             layout.prompt_start_row, layout.prompt_start_col)
         self.window.addstr('> ')
 
+    def getchar(self):
+        "Get a single character from the user"
+        return self.window.getch()
+
     def getstr(self):
-        "Get input from the user. Returns a string."
+        "Get an input string from the user"
         return self.window.getstr()
 
     def redraw(self):

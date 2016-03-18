@@ -83,9 +83,10 @@ class ChatApp:
     # Curses screen object
     screen = None
 
-    def __init__(self, config):
+    def __init__(self, config, args):
         self.config = config
         self.layout = evchat.ui.Layout()
+        self.args   = args
 
     def _start_curses(self):
         "Start curses, and initialize the `screen` class variable"
@@ -108,33 +109,49 @@ class ChatApp:
 
     def start(self):
         "Initialize curses, draw the UI, and start the main loop"
+        debug = None
 
-        # Start curses and initialize all curses-based objects
-        self._start_curses()
-        self.screen  = ChatApp.screen
-        self.title   = evchat.ui.Title(self.layout, self.screen)
-        self.history = evchat.ui.History(self.layout, self.screen, self.config)
-        self.prompt  = evchat.ui.Prompt(self.layout, self.screen)
+        try:
+            # Start curses and initialize all curses-based objects
+            self._start_curses()
+            self.screen  = ChatApp.screen
+            self.title   = evchat.ui.Title(self.layout, self.screen)
+            self.history = evchat.ui.History(self.layout, self.screen, self.config)
+            self.prompt  = evchat.ui.Prompt(self.layout, self.screen)
 
-        # Run the main loop
-        while True:
-            self.redraw()
+            # Open the debug file
+            if self.args.debug:
+                debug = open('evchat.debug', 'w')
 
-            # Parse the input
-            text = self.prompt.getstr()
-            if text == '':
-                continue
-            if text == '/quit':
-                break
+            # Run the main loop
+            while True:
+                self.redraw()
 
-            # Construct and store a Message object
-            now = datetime.datetime.now()
-            msg = evchat.core.Message(now, self.config.name, text)
-            self.history.append(msg)
+                # Get input
+                text = self.prompt.getstr()
 
-            # Update the UI
-            self.history.redraw()
-            self.prompt.reset()
+                if debug:
+                    debug.write(text + "\n")
+                    debug.flush()
+
+                # Parse the input
+                if text == '':
+                    continue
+                if text == '/quit':
+                    break
+
+                # Construct and store a Message object
+                now = datetime.datetime.now()
+                msg = evchat.core.Message(now, self.config.name, text)
+                self.history.append(msg)
+
+                # Update the UI
+                self.history.redraw()
+                self.prompt.reset()
+
+        finally:
+            if debug:
+                debug.close
 
     def stop(self):
         "Stop curses and stop the app. You must call this before exiting."

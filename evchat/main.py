@@ -29,7 +29,7 @@ def run():
         conf.save()
 
     # Run the app
-    app = evchat.core.ChatApp(conf)
+    app = evchat.core.ChatApp(conf, args)
     try:
         app.start()
     except KeyboardInterrupt:
