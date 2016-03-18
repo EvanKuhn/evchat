@@ -1,4 +1,5 @@
 import argparse
+import curses
 import sys
 import evchat
 
@@ -18,7 +19,10 @@ def run():
 
     # Show version?
     if args.version:
-        print evchat.TITLE
+        pyver = sys.version_info
+        python_version = "%s.%s.%s" % (pyver.major, pyver.minor, pyver.micro)
+        print "evchat version %s (using Python %s, curses %s)" % \
+          (evchat.VERSION, python_version, curses.version)
         sys.exit()
 
     # Make sure we have all the necessary config data

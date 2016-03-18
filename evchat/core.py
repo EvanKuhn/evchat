@@ -135,16 +135,15 @@ class ChatApp:
                 self.redraw()
 
                 # Get input
-                #text = self.prompt.getstr()
-                c = self.prompt.getchar()
+                text = self.prompt.getstr()
 
-                if debug:
-                    debug.write("char: " + str(c) + "\n")
-                    debug.write("KEY_UP = " + str(curses.KEY_UP) + "\n")
-                    debug.write(str(c == curses.KEY_UP) + "\n")
-                    debug.flush()
-
-                text = '' #TODO
+                #c = self.prompt.getchar()
+                #if debug:
+                #    debug.write("char: " + str(c) + "\n")
+                #    debug.write("KEY_UP = " + str(curses.KEY_UP) + "\n")
+                #    debug.write(str(c == curses.KEY_UP) + "\n")
+                #    debug.flush()
+                #text = '' #TODO
 
                 # Parse the input
                 if text == '':
@@ -161,11 +160,18 @@ class ChatApp:
                 self.history.redraw()
                 self.prompt.reset()
 
+        # Ignore keyboard interrupts and exit cleanly
+        except KeyboardInterrupt:
+            pass
+
+        # For other interrupts, re-raise them so we can debug
         except:
             if debug:
                 msg = "Exception: " + str(sys.exc_info()[0]) + "\n"
                 debug.write(msg)
+            raise
 
+        # Make sure to close the debug file
         finally:
             if debug:
                 debug.close

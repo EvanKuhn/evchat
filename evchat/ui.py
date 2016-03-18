@@ -1,4 +1,5 @@
 import curses
+import curses.textpad
 import os
 import evchat
 
@@ -7,6 +8,9 @@ import evchat
 #==============================================================================
 
 class Layout:
+    TITLE_ROWS = 1
+    PROMPT_ROWS = 1
+
     def __init__(self):
         "Determine the terminal size, and size of each window"
 
@@ -14,17 +18,17 @@ class Layout:
         self.rows, self.cols = Layout.terminal_size()
 
         # Calculate dimensions of each window
-        self.title_rows         = 1
+        self.title_rows         = Layout.TITLE_ROWS
         self.title_cols         = self.cols
         self.title_start_row    = 0
         self.title_start_col    = 0
 
-        self.history_rows       = self.rows - 2
+        self.history_rows       = self.rows - Layout.TITLE_ROWS - Layout.PROMPT_ROWS
         self.history_cols       = self.cols
         self.history_start_row  = 1
         self.history_start_col  = 0
 
-        self.prompt_rows        = 1
+        self.prompt_rows        = Layout.PROMPT_ROWS
         self.prompt_cols        = self.cols
         self.prompt_start_row   = self.rows - 1
         self.prompt_start_col   = 0
