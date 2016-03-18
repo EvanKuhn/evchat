@@ -98,7 +98,7 @@ class Prompt:
             layout.prompt_start_row, layout.prompt_start_col)
         self.window.addstr('> ')
 
-    def get(self):
+    def getstr(self):
         "Get input from the user. Returns a string."
         return self.window.getstr()
 

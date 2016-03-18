@@ -1,5 +1,6 @@
 import ui
 import core
+import main
 
-VERSION = "0.0.1"
-TITLE = "evchat v" + VERSION
+VERSION = "0.0.2"
+TITLE = "evchat version " + VERSION

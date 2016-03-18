@@ -3,6 +3,7 @@ TODO:
 [X] Deinitialize curses safely, even on error
 [X] Timestamps: show if configured
 [X] App configuration
+[X] Add usage info
 [ ] Restrict usernames to alphanumeric, [._-]
 [ ] Help text
 [ ] Support commands, make extensible

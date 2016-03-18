@@ -1,22 +1,9 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 import sys
 sys.path.insert(0, os.path.abspath('__file__/..'))
 import evchat
 
-# Make sure we have all the necessary config data
-conf = evchat.core.Config()
-conf.load()
-if not conf.has_required_data():
-    conf.prompt_user()
-    conf.save()
-
-# Run the app
-app = evchat.core.ChatApp(conf)
-try:
-    app.start()
-except KeyboardInterrupt:
-    pass
-finally:
-    app.stop()
+evchat.main.run()

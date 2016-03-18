@@ -121,7 +121,7 @@ class ChatApp:
             self.redraw()
 
             # Parse the input
-            text = self.prompt.get()
+            text = self.prompt.getstr()
             if text == '':
                 continue
             if text == '/quit':
