@@ -10,6 +10,175 @@ def terminal_size():
     rows, cols = os.popen('stty size', 'r').read().split()
     return (int(rows), int(cols))
 
+#==============================================================================
+# A Line represents a line of text. Words are stored separately.
+#==============================================================================
+
+class Line:
+    def __init__(self):
+        self.words = []
+        self.length = 0
+        self.cursor = 0
+
+    def addch(self, c):
+        "Add a character to the line. Unprintable chars, and tabs, are ignored."
+        if curses.ascii.isprint(c) and c != curses.ascii.TAB:
+            pass
+
+    def delch(self):
+        '''
+        Delete the character at the cursor and return it. If at the beginning of
+        the line, return None.
+        '''
+        pass
+
+    def str(self):
+        pass
+
+#==============================================================================
+# A Document object represents a text document. It handles insertion and
+# deletion of characters, cursor movement, and line wrapping. Lines are stored
+# individually, as strings.
+#==============================================================================
+
+class Document:
+    def __init__(self, width):
+        self.width = width
+        self.lines = ['']
+        self.y = 0
+        self.x = 0
+
+    def getyx(self):
+        "Get the current cursor location"
+        return self.y, self.x
+
+    def move(self, y, x):
+        "Set the new cursor location."
+        num_rows = len(self.lines)
+        self.y = y if y < num_rows else num_rows
+        num_cols = len(self.lines[self.y])
+        self.x = x if x <= num_cols else num_cols
+
+    def move_up(self):
+        "Move the cursor up"
+        move(self.y-1, self.x)
+
+    def move_down(self):
+        "Move the cursor down"
+        move(self.y+1, self.x)
+
+    def move_left(self):
+        "Move the cursor left"
+        if self.x == 0:
+            self.move_up()
+            self.move_end()
+        else:
+            move(self.y, self.x-1)
+
+    def move_right(self):
+        "Move the cursor right"
+        if self.x == len(self.lines[self.y]):
+            self.move_down()
+            self.move_begin()
+        else:
+            move(self.y, self.x+1)
+
+    def move_begin(self):
+        "Move the cursor to the beginning of the line"
+        self.move(self.y, 0)
+        pass
+
+    def move_end(self):
+        "Move the cursor to the end of the line"
+        self.move(self.y, len(self.lines[self.y]))
+        pass
+
+    def addch(self, c):
+        "Insert a character at the current cursor location"
+        # Insert into the line
+        line = self.lines[self.y]
+        self.lines[self.y] = line[:self.x] + chr(c) + line[self.x:]
+        # Fixup line lengths
+        self._fixup_forward()
+
+    def delch(self):
+        "Delete the character at the current cursor location"
+        # If at the beginning of the document, do nothing
+        if self.y == 0 and self.x == 0:
+            pass
+
+        # If at the beginning of a line, move to the previous line
+        elif self.x == 0:
+            self.move_left()
+            # If the line above (which we're now on) is empty, remove it
+            if len(self.lines(self.y)) == 0:
+                self._remove_line()
+                self.move_begin()
+            # Otherwise delete the last char. If the line no longer ends in a
+            # space, grab and append the word from the next line.
+            else:
+                # Delete a character.
+                self._simple_delete_char()
+                if self.lines[self.y][-1] != ' ':
+                    self._take_word_from_next_line()
+                self._fixup_forward()
+
+        # We're not at the beginning of the line, so just remove the current char
+        else:
+            self._simple_delete_char()
+            self._fixup_forward()
+
+    def _simple_delete_char(self):
+        "Delete the character behind the cursor. Does nothing if at the beginning of the line."
+        if self.x > 0:
+            self.move_left()
+            self._remove_line()
+
+    def _take_word_from_next_line(self):
+        "Take the word from the next line and append it to this line"
+        next_y = self.y+1
+
+        # Get the word from the next line, if there is one
+        next_x = self._index_of_second_word(next_y)
+
+        # If there is no next word, remove the next line
+        if next_x == None:
+            self._remove_line(next_y)
+
+        # Take the next word and append it to the current line. If the next
+        # line becomes empty, remove it.
+        else:
+            self.lines[self.y] += self.lines[next_y][:next_x]
+            self.lines[next_y] = self.lines[next_y][next_x:]
+            if len(self.lines[next_y]) == 0:
+                self._remove_line(next_y)
+
+    def _fixup_forward(self):
+        "Fix word wrapping from the current line forward. Move the cursor when appropriate."
+        pass
+
+    def _index_of_second_word(self, y):
+        """
+        Return the index of the start of the second word on line 'y'.
+        Returns None if the next line is empty or does not exist.
+        Returns the length of the line if it contains only one word.
+        """
+        if y > len(self.lines) or len(self.lines[y]) == 0:
+            return None
+        i = 0
+        line = self.lines[y]
+        linelen = len(line)
+        while i < linelen and line[i] != ' ':
+            i++
+        while i < linelen and line[i] == ' ':
+            i++
+        return i
+
+    def _remove_line(self, y=None):
+        "Remove line at index 'y'. Remove the current line if y not specified."
+        if y == None:
+            y = self.y
+        self.lines = self.lines[:y] + self.lines[y+1:]
 
 #==============================================================================
 # ExitBox
@@ -21,10 +190,10 @@ class EditBox:
         self.ncols   = ncols
         self.begin_y = begin_y
         self.begin_x = begin_x
-        self.window  = curses.newwin(nlines, ncols, begin_y, begin_x)
+        self.window  = curses.newwin(nlines*2, ncols, begin_y, begin_x)
         self.window.keypad(1)
-        self.x = 0
-        self.y = 0
+        self.window.scrollok(1)
+        self.window.idlok(1)
         self.buffer = ''
 
     def refresh(self):
@@ -32,11 +201,9 @@ class EditBox:
         return self
 
     def clear(self):
-        self.x = 0
-        self.y = 0
-        self.buffer = ''
         self.window.clear()
         self.window.move(0, 0)
+        self.buffer = ''
         return self
 
     def edit(self):
@@ -48,6 +215,16 @@ class EditBox:
                 self.buffer += chr(c)
             elif c == curses.ascii.NL:
                 return self.buffer
+            elif c == curses.KEY_RESIZE:
+                rows,cols = terminal_size()
+                self.window.addstr("new size: %d x %d" % (rows, cols))
+                #curses.resizeterm(rows, cols)
+
+            #elif c == curses.ascii.KEY_LEFT:
+            #    y,x = self.window.getyx
+            #    if x == 0
+            #KEY_UP, KEY_LEFT, KEY_RIGHT
+            # window.getyx()
 
     def getstr(self):
         return self.window.getstr()
